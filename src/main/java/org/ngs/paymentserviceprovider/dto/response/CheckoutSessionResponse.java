@@ -1,6 +1,7 @@
 package org.ngs.paymentserviceprovider.dto.response;
 
 import lombok.*;
+import org.ngs.paymentserviceprovider.enums.CheckoutSessionStatus;
 
 @Data
 @Builder
@@ -9,5 +10,5 @@ import lombok.*;
 public class CheckoutSessionResponse {
     private String id;
     private String url;
-    private String status;
+    private CheckoutSessionStatus status;
 }

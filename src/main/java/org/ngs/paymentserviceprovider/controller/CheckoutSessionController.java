@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.ngs.paymentserviceprovider.dto.request.CreateCheckoutSessionRequest;
 import org.ngs.paymentserviceprovider.dto.response.CheckoutSessionResponse;
 import org.ngs.paymentserviceprovider.service.CheckoutSessionService;
+import org.ngs.paymentserviceprovider.utils.IdempotencyUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,9 @@ public class CheckoutSessionController {
             @RequestBody CreateCheckoutSessionRequest request,
             @RequestHeader("Idempotency-Key") String idempotencyKey) {
         log.info("received create checkout session request {}", request);
-        CheckoutSessionResponse response = checkoutSessionService.createSession(request, idempotencyKey);
+        CheckoutSessionResponse response = IdempotencyUtil.executeIdempotentMethod(
+                () -> checkoutSessionService.createSession(request, idempotencyKey),
+                () -> checkoutSessionService.createSessionIdempotentFallback(idempotencyKey));
         log.info("create checkout session response {}", response);
         return ResponseEntity.ok(response);
     }
