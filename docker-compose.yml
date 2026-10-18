@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres-psp
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: payments_psp
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: userpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-psp-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-psp-data:
