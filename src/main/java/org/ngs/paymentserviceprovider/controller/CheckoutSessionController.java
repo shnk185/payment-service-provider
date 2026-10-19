@@ -2,6 +2,7 @@ package org.ngs.paymentserviceprovider.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.ngs.paymentserviceprovider.dto.request.ConfirmCheckoutSessionRequest;
 import org.ngs.paymentserviceprovider.dto.request.CreateCheckoutSessionRequest;
 import org.ngs.paymentserviceprovider.dto.response.CheckoutSessionResponse;
 import org.ngs.paymentserviceprovider.service.CheckoutSessionService;
@@ -35,5 +36,14 @@ public class CheckoutSessionController {
         CheckoutSessionResponse response = checkoutSessionService.getSession(id);
         log.info("get checkout session response {}", response);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/confirm")
+    public ResponseEntity<CheckoutSessionResponse> confirmCheckoutSession(@PathVariable String id,
+                                                                          @RequestBody ConfirmCheckoutSessionRequest request) {
+        log.info("received confirm checkout session request {} {}", id, request);
+        CheckoutSessionResponse response = checkoutSessionService.confirmSession(id, request);
+        log.info("confirm checkout session response {}", response);
+        return ResponseEntity.accepted().body(response);
     }
 }

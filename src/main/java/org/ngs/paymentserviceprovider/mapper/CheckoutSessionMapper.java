@@ -1,6 +1,7 @@
 package org.ngs.paymentserviceprovider.mapper;
 
 import lombok.experimental.UtilityClass;
+import org.ngs.paymentserviceprovider.dto.SessionErrorResponse;
 import org.ngs.paymentserviceprovider.dto.response.CheckoutSessionResponse;
 import org.ngs.paymentserviceprovider.entity.CheckoutSessionEntity;
 
@@ -15,6 +16,19 @@ public class CheckoutSessionMapper {
                 .amount(session.getAmount())
                 .currency(session.getCurrency())
                 .expiresAt(session.getExpiresAt())
+                .successUrl(session.getSuccessUrl())
+                .cancelUrl(session.getCancelUrl())
+                .error(errorOf(session))
+                .build();
+    }
+
+    private static SessionErrorResponse errorOf(CheckoutSessionEntity session) {
+        if (session.getLastErrorCode() == null) {
+            return null;
+        }
+        return SessionErrorResponse.builder()
+                .code(session.getLastErrorCode())
+                .message(session.getLastErrorMessage())
                 .build();
     }
 }

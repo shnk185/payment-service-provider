@@ -3,17 +3,19 @@ package org.ngs.paymentserviceprovider.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.ngs.paymentserviceprovider.config.properties.PspConfig;
+import org.ngs.paymentserviceprovider.dto.AuthorizePaymentRequest;
+import org.ngs.paymentserviceprovider.dto.request.ConfirmCheckoutSessionRequest;
 import org.ngs.paymentserviceprovider.dto.request.CreateCheckoutSessionRequest;
 import org.ngs.paymentserviceprovider.dto.response.CheckoutSessionResponse;
 import org.ngs.paymentserviceprovider.entity.CheckoutSessionEntity;
 import org.ngs.paymentserviceprovider.entity.CheckoutSessionMetadataEntity;
 import org.ngs.paymentserviceprovider.enums.CheckoutSessionStatus;
+import org.ngs.paymentserviceprovider.exception.ResourceNotFoundException;
 import org.ngs.paymentserviceprovider.mapper.CheckoutSessionMapper;
 import org.ngs.paymentserviceprovider.repository.CheckoutSessionMetadataRepository;
 import org.ngs.paymentserviceprovider.repository.CheckoutSessionRepository;
-import org.springframework.http.HttpStatus;
+import org.ngs.paymentserviceprovider.repository.PaymentMethodRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -27,6 +29,8 @@ import java.util.stream.Collectors;
 public class CheckoutSessionService {
     private final CheckoutSessionRepository checkoutSessionRepository;
     private final CheckoutSessionMetadataRepository checkoutSessionMetadataRepository;
+    private final PaymentMethodRepository paymentMethodRepository;
+    private final OutboxService outboxService;
     private final PspConfig pspConfig;
 
     @Transactional
@@ -64,8 +68,40 @@ public class CheckoutSessionService {
 
     public CheckoutSessionResponse getSession(String uniqueId) {
         CheckoutSessionEntity session = checkoutSessionRepository.findByUniqueId(uniqueId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No such checkout session: " + uniqueId));
+                .orElseThrow(() -> new ResourceNotFoundException("No such checkout session " + uniqueId));
+        return CheckoutSessionMapper.dtoFromEntity(session, pspConfig.getBaseUrl());
+    }
+
+    @Transactional
+    public CheckoutSessionResponse confirmSession(String uniqueId, ConfirmCheckoutSessionRequest request) {
+        CheckoutSessionEntity session = checkoutSessionRepository.findByUniqueIdForUpdate(uniqueId)
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid cart id"));
+
+        if (session.getStatus() != CheckoutSessionStatus.OPEN) {
+            return CheckoutSessionMapper.dtoFromEntity(session, pspConfig.getBaseUrl());
+        }
+
+        if (session.getExpiresAt() != null && session.getExpiresAt().isBefore(Instant.now())) {
+            session.setStatus(CheckoutSessionStatus.EXPIRED);
+            session.setLastErrorCode("session_expired");
+            session.setLastErrorMessage("This checkout session has expired.");
+            checkoutSessionRepository.save(session);
+            return CheckoutSessionMapper.dtoFromEntity(session, pspConfig.getBaseUrl());
+        }
+
+        paymentMethodRepository.findByUniqueId(request.getPaymentMethodId())
+                .orElseThrow(() -> new ResourceNotFoundException("No such payment method " + request.getPaymentMethodId()));
+
+        session.setStatus(CheckoutSessionStatus.PROCESSING);
+        session.setLastErrorCode(null);
+        session.setLastErrorMessage(null);
+        checkoutSessionRepository.save(session);
+
+        outboxService.appendAuthorizationRequested(AuthorizePaymentRequest.builder()
+                .sessionUniqueId(session.getUniqueId())
+                .paymentMethodUniqueId(request.getPaymentMethodId())
+                .build());
+
         return CheckoutSessionMapper.dtoFromEntity(session, pspConfig.getBaseUrl());
     }
 }
