@@ -11,7 +11,9 @@ import org.ngs.paymentserviceprovider.enums.CheckoutSessionStatus;
 import org.ngs.paymentserviceprovider.mapper.CheckoutSessionMapper;
 import org.ngs.paymentserviceprovider.repository.CheckoutSessionMetadataRepository;
 import org.ngs.paymentserviceprovider.repository.CheckoutSessionRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -58,5 +60,12 @@ public class CheckoutSessionService {
             return CheckoutSessionMapper.dtoFromEntity(existing, pspConfig.getBaseUrl());
         }
         return null;
+    }
+
+    public CheckoutSessionResponse getSession(String uniqueId) {
+        CheckoutSessionEntity session = checkoutSessionRepository.findByUniqueId(uniqueId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "No such checkout session: " + uniqueId));
+        return CheckoutSessionMapper.dtoFromEntity(session, pspConfig.getBaseUrl());
     }
 }

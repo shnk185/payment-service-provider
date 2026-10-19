@@ -12,6 +12,9 @@ public class CheckoutSessionMapper {
                 .id(session.getUniqueId())
                 .url(baseUrl + "/checkout/" + session.getUniqueId())
                 .status(session.getStatus())
+                .amount(session.getAmount())
+                .currency(session.getCurrency())
+                .expiresAt(session.getExpiresAt())
                 .build();
     }
 }

@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface CheckoutSessionRepository extends JpaRepository<CheckoutSessionEntity, Long> {
     Optional<CheckoutSessionEntity> findByIdempotencyKey(String idempotencyKey);
+
+    Optional<CheckoutSessionEntity> findByUniqueId(String uniqueId);
 }

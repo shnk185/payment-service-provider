@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
+    <link rel="stylesheet" href="/checkout.css">
+    <script src="/checkout.js" defer></script>
+</head>
+<body>
+<main class="card">
+    <header class="card__header">
+        <span class="brand">Pay</span>
+        <span id="status-badge" class="badge">Loading…</span>
+    </header>
+
+    <section class="amount">
+        <p class="amount__label">Amount due</p>
+        <p class="amount__value" id="amount">—</p>
+    </section>
+
+    <form id="payment-form" class="form" autocomplete="off" novalidate>
+        <label class="field">
+            <span>Card number</span>
+            <input id="card-number" inputmode="numeric" value="4242 4242 4242 4242">
+        </label>
+        <div class="row">
+            <label class="field">
+                <span>Expiry</span>
+                <input id="card-expiry" value="12 / 34">
+            </label>
+            <label class="field">
+                <span>CVC</span>
+                <input id="card-cvc" value="123">
+            </label>
+        </div>
+        <button type="submit" id="pay-button" class="btn btn--primary" disabled>Pay</button>
+        <button type="button" id="cancel-button" class="btn btn--ghost" disabled>Cancel</button>
+    </form>
+
+    <p id="message" class="message" role="alert"></p>
+</main>
+</body>
+</html>

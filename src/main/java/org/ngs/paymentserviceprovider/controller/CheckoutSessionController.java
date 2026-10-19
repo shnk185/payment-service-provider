@@ -28,4 +28,12 @@ public class CheckoutSessionController {
         log.info("create checkout session response {}", response);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CheckoutSessionResponse> getCheckoutSession(@PathVariable String id) {
+        log.info("received get checkout session request {}", id);
+        CheckoutSessionResponse response = checkoutSessionService.getSession(id);
+        log.info("get checkout session response {}", response);
+        return ResponseEntity.ok(response);
+    }
 }
