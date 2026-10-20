@@ -22,6 +22,7 @@ public class AuthorizationProcessor {
     private final CheckoutSessionRepository checkoutSessionRepository;
     private final PaymentMethodRepository paymentMethodRepository;
     private final PaymentAuthorizer paymentAuthorizer;
+    private final WebhookService webhookService;
 
     @Transactional
     public void process(AuthorizePaymentRequest request) {
@@ -51,5 +52,8 @@ public class AuthorizationProcessor {
             session.setLastErrorMessage(result.getMessage());
         }
         checkoutSessionRepository.save(session);
+        webhookService.append(session, result.isApproved()
+                ? WebhookService.SESSION_COMPLETED
+                : WebhookService.SESSION_PAYMENT_FAILED);
     }
 }
